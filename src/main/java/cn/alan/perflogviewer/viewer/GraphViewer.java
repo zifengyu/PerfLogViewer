@@ -2,8 +2,6 @@ package cn.alan.perflogviewer.viewer;
 
 import java.util.Date;
 
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
@@ -49,9 +47,7 @@ public class GraphViewer extends Canvas {
 				}		
 			}
 			
-		});
-	    
-	    
+		});	    
 		
 		addPaintListener(new CanvasPaintListener());
 		
@@ -141,9 +137,7 @@ public class GraphViewer extends Canvas {
 			
 			gc.setLineWidth(2);
 			gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
-			gc.drawRectangle(chartLeftTopX, chartLeftTopY, chartWidth, chartHeight);
-			
-			
+			gc.drawRectangle(chartLeftTopX, chartLeftTopY, chartWidth, chartHeight);		
 			
 		}
 		

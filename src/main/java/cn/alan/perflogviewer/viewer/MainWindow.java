@@ -29,16 +29,16 @@ public class MainWindow extends ApplicationWindow {
 
 	private CounterStatsTableViewer viewer;
 	
-	private final static String ADD_FILE_ICON_PATH = MainWindow.class.getResource("icon/add_correction.gif").getFile();
-	private final static String ADD_FOLDER_ICON_PATH = MainWindow.class.getResource("icon/expand_all.gif").getFile();
-	private final static String REMOVE_COUNTER_ICON_PATH = MainWindow.class.getResource("icon/remove_correction.gif").getFile();
-	private final static String REMOVE_ALL_COUNTER_ICON_PATH = MainWindow.class.getResource("icon/delete_edit.gif").getFile();
-	private final static String FILTER_ICON_PATH = MainWindow.class.getResource("icon/filter.gif").getFile();
-	private final static String APPLY_FILTER_ICON_PATH = MainWindow.class.getResource("icon/scope.gif").getFile();
-	private final static String CLEAR_FILTER_ICON_PATH = MainWindow.class.getResource("icon/clear.gif").getFile();
-	private final static String COPY_RESULT_ICON_PATH = MainWindow.class.getResource("icon/alltopics_co.gif").getFile();
+	private final static String ICON_FOLDER_BASE				= ".";
+	private final static String ADD_FILE_ICON_PATH				= ICON_FOLDER_BASE + "/icon/add_correction.gif";
+	private final static String ADD_FOLDER_ICON_PATH			= ICON_FOLDER_BASE + "/icon/expand_all.gif";
+	private final static String REMOVE_COUNTER_ICON_PATH		= ICON_FOLDER_BASE + "/icon/remove_correction.gif";
+	private final static String REMOVE_ALL_COUNTER_ICON_PATH	= ICON_FOLDER_BASE + "/icon/delete_edit.gif";
+	private final static String FILTER_ICON_PATH				= ICON_FOLDER_BASE + "/icon/filter.gif";
+	private final static String APPLY_FILTER_ICON_PATH			= ICON_FOLDER_BASE + "/icon/scope.gif";
+	private final static String CLEAR_FILTER_ICON_PATH			= ICON_FOLDER_BASE + "/icon/clear.gif";
+	private final static String COPY_RESULT_ICON_PATH			= ICON_FOLDER_BASE + "/icon/alltopics_co.gif";
 	
-
 	public MainWindow() {
 		super(null);	
 		addToolBar(SWT.NONE);		

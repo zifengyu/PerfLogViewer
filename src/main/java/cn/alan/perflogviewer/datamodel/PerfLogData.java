@@ -3,8 +3,6 @@ package cn.alan.perflogviewer.datamodel;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -63,6 +61,8 @@ public class PerfLogData {
 				counterList.add(ct);
 			}
 		}
+		
+		reader.close();
 	}
 	
 	public void removeCounter(Object ct) {
@@ -103,21 +103,6 @@ public class PerfLogData {
 				date = date1;
 		}
 		return date;	
-	}
-	
-	public static void main(String[] args) throws Exception, ParseException {
-		PerfLogData pld = new PerfLogData();
-		pld.loadPerfLogFile("C:\\Users\\yua2\\Documents\\Project\\xCP\\Test Result\\xCP_FT_50users_20111019_1\\xCP_000011.csv");
-		for (int i = 0; i < pld.counterList.size(); ++ i) {
-			Counter ct = pld.counterList.get(i);
-			System.out.println(ct.getComputer()+"\t" + ct.getObject() + "\t" + ct.getCounter() + "\t" + ct.getInstance() + ":" 
-			+ CounterValue.getAverage(ct.getData(ct.getStartTime(), ct.getEndTime())).getStringValue(ct.getDataType()) + "\t"
-			+ CounterValue.getMin(ct.getData(ct.getStartTime(), ct.getEndTime())).getStringValue(ct.getDataType()) + "\t"
-			+ CounterValue.getMax(ct.getData(ct.getStartTime(), ct.getEndTime())).getStringValue(ct.getDataType()));
-			
-		}
-	}
-	
-	
+	}	
 
 }

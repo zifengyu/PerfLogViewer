@@ -12,5 +12,5 @@ org.eclipse.swt.cocoa.macosx.x86_64
 
 Refer to http://stackoverflow.com/questions/292548/how-do-you-build-an-swt-application-with-maven for more details. 
 
-2. Run the following Maven command to execute the program
-mvn exec:java -Dexec.mainClass="cn.alan.perflogviewer.viewer.MainWindow"
+2. Run the following Maven command to generate distribution under target\PerfLogViewer folder
+mvn package
