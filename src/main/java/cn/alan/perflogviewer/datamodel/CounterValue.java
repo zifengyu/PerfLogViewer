@@ -81,7 +81,7 @@ public class CounterValue {
 		return new CounterValue(min);
 	}
 	
-	protected double value;
+	private double value;
 	
 
 }
