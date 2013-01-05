@@ -66,7 +66,8 @@ public class Counter {
 	}
 
 	public void addData(Date time, String value) {
-		data.put(time, new CounterValue(value));		
+		Date time2 = new Date(time.getTime());
+		data.put(time2, new CounterValue(value));		
 		
 	}
 	
