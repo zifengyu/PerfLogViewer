@@ -57,6 +57,7 @@ public class PerfLogData {
 		Iterator<Counter> iter = newCounterList.iterator(); 
 		while (iter.hasNext()) {
 			Counter ct = iter.next();
+			//ct.updateStats(ct.getStartTime(), ct.getEndTime());
 			if (!counterList.contains(ct)) {				
 				counterList.add(ct);
 			}
@@ -90,7 +91,7 @@ public class PerfLogData {
 			if (date1 != null && date1.compareTo(date) < 0)
 				date = date1;
 		}
-		return date;	
+		return (Date) date.clone();	
 	}
 	
 	public Date getCounterEndTime() {		
@@ -102,7 +103,13 @@ public class PerfLogData {
 			if (date1 != null && date1.compareTo(date) > 0)
 				date = date1;
 		}
-		return date;	
-	}	
+		return (Date) date.clone();	
+	}
+	
+	public void updateCounterStats(Date start, Date end) {
+		for (int i = 0; i < counterList.size(); ++i) {
+			counterList.get(i).updateStats(start, end);
+		}
+	}
 
 }
