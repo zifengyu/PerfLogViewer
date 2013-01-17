@@ -36,7 +36,7 @@ public class PerfTable extends JTable {
     	if (column <= 2) {
     		
     	} else {    		
-    		render.setHorizontalAlignment(SwingConstants.CENTER);
+    		render.setHorizontalAlignment(SwingConstants.RIGHT);
     	}
 
         if ((row % 2) == 0) {

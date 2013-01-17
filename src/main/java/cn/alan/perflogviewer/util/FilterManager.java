@@ -30,7 +30,10 @@ public class FilterManager {
 	}
 	
 	public void setGlobalStartTime(Date time) {
-		setGlobalStartTime(time.getTime());		
+		if (time != null)
+			setGlobalStartTime(time.getTime());
+		else 
+			setGlobalStartTime(-1);
 	}
 	
 	public void setGlobalStartTime(long time) {		
@@ -41,7 +44,10 @@ public class FilterManager {
 	}
 	
 	public void setGlobalEndTime(Date time) {
-		setGlobalEndTime(time.getTime());		
+		if (time != null)
+			setGlobalEndTime(time.getTime());
+		else
+			setGlobalEndTime(-1);
 	}
 	
 	public void setGlobalEndTime(long time) {		
@@ -51,18 +57,18 @@ public class FilterManager {
 		checkAndUpdatefilterTime();
 	}
 	
-	public void setFilterStartTime(Date time) {
+	public void setFilterStartTime(Date time) {		
 		setFilterStartTime(time.getTime());		
 	}
 	
 	public void setFilterStartTime(long time) {		
 		if (time < globalStartTime || time > globalEndTime)  
-			throw new IllegalArgumentException("Error: filter start time is out of the global time range");
+			throw new IllegalArgumentException("Error: filter start time is out of the global time range" + time + " : " + globalStartTime + " : " + globalEndTime);
 		
 		filterStartTime = time;		
 		
-		if (filterEndTime < filterStartTime)
-			filterEndTime = filterStartTime;		
+		//if (filterEndTime < filterStartTime)
+		//	filterEndTime = filterStartTime;		
 	}
 	
 	public void setFilterEndTime(Date time) {
@@ -75,8 +81,8 @@ public class FilterManager {
 		
 		filterEndTime = time;
 		
-		if (filterEndTime < filterStartTime)
-			filterStartTime = filterEndTime;		
+		//if (filterEndTime < filterStartTime)
+		//	filterStartTime = filterEndTime;		
 	}
 	
 	/**
@@ -102,7 +108,7 @@ public class FilterManager {
 		
 	}
 	
-	private void reset() {
+	public void reset() {
 		globalStartTime = -1;
 		globalEndTime = -1;
 		filterStartTime = -1;
@@ -110,7 +116,7 @@ public class FilterManager {
 	}
 
 	public boolean isValid() {		
-		return globalStartTime != -1 && globalStartTime <= filterStartTime && filterStartTime<= filterEndTime && filterEndTime <= globalEndTime;		
+		return globalStartTime != -1 && globalStartTime <= filterStartTime && filterStartTime <= filterEndTime + 1 && filterEndTime <= globalEndTime;		
 	}
 
 }

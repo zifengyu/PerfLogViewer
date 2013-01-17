@@ -4,20 +4,32 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -26,20 +38,16 @@ import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.plaf.FontUIResource;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
-import javax.swing.SwingConstants;
 
-
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.XYPlot;
@@ -52,9 +60,10 @@ import cn.alan.perflogviewer.datamodel.CounterValue;
 import cn.alan.perflogviewer.datamodel.PerfChartDataSet;
 import cn.alan.perflogviewer.datamodel.PerfLogData;
 import cn.alan.perflogviewer.datamodel.PerfTableModel;
+import cn.alan.perflogviewer.util.FileUtils;
 import cn.alan.perflogviewer.util.FilterManager;
 
-public class PLV extends JPanel implements ListSelectionListener, ActionListener {
+public class PLV extends JPanel implements ListSelectionListener, ActionListener, ClipboardOwner {
 
 	private static final long serialVersionUID = 1L;
 
@@ -74,13 +83,15 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 	private PerfChartDataSet perfChartDataSet;
 	private ChartPanel chartView;
 	private DateAxis domain;
-	
+
 	private PreviewComponent previewComponent;
 
 	private StatusBar statusBar;
 
 	private PerfLogData perfLogData;
 	private FilterManager filterManager;
+	
+	private Clipboard clipboard;
 
 	private int lastSelectedRow = -1;
 
@@ -88,6 +99,7 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 		super(new BorderLayout());
 		perfLogData = new PerfLogData();
 		filterManager = new FilterManager();
+		clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();		
 		setupLookAndFeel();
 	}
 
@@ -135,7 +147,7 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 		perfChartDataSet = new PerfChartDataSet();
 
 		domain = new DateAxis("Time");		
-		NumberAxis range = new NumberAxis("");
+		NumberAxis range = new NumberAxis("");		
 		domain.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 12));
 		range.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 12));
 		domain.setLabelFont(new Font("SansSerif", Font.PLAIN, 13));
@@ -152,43 +164,20 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 		domain.setUpperMargin(0.0);
 		domain.setTickLabelsVisible(true);
 
-		range.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+		range.setStandardTickUnits(NumberAxis.createIntegerTickUnits());		
 		JFreeChart chart = new JFreeChart("", new Font("SansSerif", Font.BOLD, 24), plot, true);
 		chart.setBackgroundPaint(Color.white);
-		chartView = new ChartPanel(chart);
+		chartView = new ChartPanel(chart);		
 		chartView.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createEmptyBorder(4, 4, 4, 4),
 				BorderFactory.createLineBorder(Color.BLACK)));
-		//add(chartPanel);
 
-		/*
-		StandardChartTheme standardChartTheme=new StandardChartTheme("PERF");  
-		standardChartTheme.setExtraLargeFont(new Font("SansSerif", Font.PLAIN, 13));  
-		standardChartTheme.setRegularFont(new Font("SansSerif", Font.PLAIN, 11));  
-		standardChartTheme.setLargeFont(new Font("SansSerif", Font.PLAIN, 12));  
-		ChartFactory.setChartTheme(standardChartTheme);
-		JFreeChart chart = ChartFactory.createTimeSeriesChart(
-				"", // title
-				"Time", // x-axis label
-				"", // y-axis label
-				perfChartDataSet, // data
-				true, // create legend?
-				false, // generate tooltips?
-				false // generate URLs?
-				);
-
-		chartView = new ChartPanel(chart);
-		chartView.setPopupMenu(null);
-		chartView.setDomainZoomable(false);
-		chartView.setRangeZoomable(false);
-		 */
 		tableModel = new PerfTableModel(perfLogData);
 		tableView = new PerfTable();
 
 		TableColumnModel columnModel = new DefaultTableColumnModel();
-		//for (int i = 0; i < PerfTableModel.HEADER_NAME.length; ++i) {
-		//||Color||Group||Measurement||Samples||Minimum||Average||Maximum||Std. D||	
 
+		//||Color||Group||Measurement||Samples||Minimum||Average||Maximum||Std. D||	
 
 		TableColumn column = new TableColumn(0);
 		column.setHeaderValue("");
@@ -199,36 +188,38 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 
 		column = new TableColumn(1);
 		column.setHeaderValue("Group");
-		column.setPreferredWidth(100);
+		column.setPreferredWidth(PrefManager.get().getTableViewColumnSize(1));
 		columnModel.addColumn(column);
 
 		column = new TableColumn(2);
 		column.setHeaderValue("Measurement");
-		column.setPreferredWidth(200);
-		columnModel.addColumn(column);		
-
+		column.setPreferredWidth(PrefManager.get().getTableViewColumnSize(2));
+		columnModel.addColumn(column);
 
 		column = new TableColumn(3);
 		column.setHeaderValue("Samples");
-		column.setPreferredWidth(50);
+		column.setPreferredWidth(PrefManager.get().getTableViewColumnSize(3));
 		columnModel.addColumn(column);		
 
 		column = new TableColumn(4);
 		column.setHeaderValue("Minimum");
+		column.setPreferredWidth(PrefManager.get().getTableViewColumnSize(4));
 		columnModel.addColumn(column);
 
 		column = new TableColumn(5);
 		column.setHeaderValue("Average");
+		column.setPreferredWidth(PrefManager.get().getTableViewColumnSize(5));
 		columnModel.addColumn(column);
 
 		column = new TableColumn(6);
 		column.setHeaderValue("Maximum");
+		column.setPreferredWidth(PrefManager.get().getTableViewColumnSize(6));
 		columnModel.addColumn(column);
 
 		column = new TableColumn(7);
 		column.setHeaderValue("Std. Deviation");
+		column.setPreferredWidth(PrefManager.get().getTableViewColumnSize(7));
 		columnModel.addColumn(column);
-
 
 		tableView.setModel(tableModel);
 		tableView.setColumnModel(columnModel);
@@ -260,7 +251,7 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 		tableView.getSelectionModel().addListSelectionListener(this);
 
 		JScrollPane scrollPane = new JScrollPane(tableView);
-		
+
 		previewComponent = new PreviewComponent(filterManager, this);
 
 		//Add the scroll panes to a split pane.
@@ -289,7 +280,57 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 
 		fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
+		fc.setFileFilter(new FileFilter() {
 
+			@Override
+			public boolean accept(File f) {
+				if (f.isDirectory()) {   
+					return true;
+				}
+
+				String extension = FileUtils.getExtension(f); 
+				if (extension != null) {
+					if (extension.equals(FileUtils.CSV_TYPE)) {
+						return true;            
+					} 					
+				}
+				return false;
+			}
+			@Override
+			public String getDescription() {				
+				return "Comma Separated Value Files (*.csv)";
+			}
+
+		});
+
+		setDropTarget(new DropTarget() {
+			private static final long serialVersionUID = 1L;
+
+			public synchronized void drop(DropTargetDropEvent evt) {
+				try {
+					evt.acceptDrop(DnDConstants.ACTION_COPY);
+
+					@SuppressWarnings("unchecked")
+					List<File> droppedFiles = (List<File>)evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+
+					addFiles(droppedFiles.toArray(new File[0]));
+					//for (File file : droppedFiles) {
+					//	statusBar.setInfoText(file.getName());
+					//}
+				} catch (Exception ex) {
+					String msg = ex.getMessage();
+					if (msg != null && msg.length() > 40) {
+						msg = msg.substring(0, 40);
+					}
+					if (msg != null) {
+						JOptionPane.showMessageDialog(frame,
+								msg,
+								"Error",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
 	}
 
 	/**
@@ -302,6 +343,12 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 		pm.setWindowPos(frame.getX(), frame.getY());
 		pm.setDividerPos(splitPane.getDividerLocation());
 		pm.setBottomDividerPos(bottomSplitPane.getDividerLocation());
+
+		TableColumnModel columnModel = tableView.getColumnModel();
+		for (int i = 0; i < columnModel.getColumnCount(); ++i) {
+			pm.setTableViewColumnSize(i, columnModel.getColumn(i).getWidth());
+		}
+
 		pm.flush();
 	}
 
@@ -329,7 +376,6 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 							//System.out.println(currentLAFI.getName());
 							if(currentLAFI.getName().startsWith(instPlafs[i])) {
 								UIManager.setLookAndFeel(currentLAFI.getClassName());
-
 								// setup font
 								setUIFont(new FontUIResource("SansSerif", Font.PLAIN, 12));
 								break search;
@@ -337,8 +383,6 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 						}
 					}
 			}
-
-
 		} catch (Exception except) {
 			// setup font
 			setUIFont(new FontUIResource("SansSerif", Font.PLAIN, 12));
@@ -383,55 +427,220 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 		if (e.getSource() instanceof JButton) {
 			JButton source = (JButton) e.getSource();
 			if("Add files".equals(source.getToolTipText())) {
-				addFiles();
+				int returnVal = fc.showOpenDialog(this.getRootPane());
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					File[] files = fc.getSelectedFiles();
+					addFiles(files);
+				}
 			} else if("Clear all".equals(source.getToolTipText())) {
+				/*reset all*/
 				perfLogData.removeAllCounter();
+				lastSelectedRow = -1;
 				tableModel.fireTableDataChanged();
-			}
+				perfChartDataSet.removeAllCounter();
+				previewComponent.setCounter(null);
+				filterManager.reset();
+			} else if ("Remove selected row".equals(source.getToolTipText())) {
+				removeCounterFromTable();				
+			} else if ("Export to clipboard".equals(source.getToolTipText())) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("Group\tMeasurement\tSamples\tMinimum\tAverage\tMaximum\tStd. Deviation\n");
+				int col = tableView.getColumnCount();
+				int row = tableView.getRowCount();
+				
+				for (int i = 0; i < row; ++i) {					
+					for (int j = 1; j < col; ++j) {						
+						sb.append(tableView.getValueAt(i, j));
+						if (j == col - 1)
+							sb.append("\n");
+						else
+							sb.append("\t");
+						}					
+				}
+				
+				clipboard.setContents(new StringSelection(sb.toString()), this);				
+			} else if ("Export to image".equals(source.getToolTipText())) {
+				long timestamp = System.currentTimeMillis();
+				File file;
+				file = new File("plv-" + timestamp + ".png");
+				/*
+				do {
+					//timestamp = 1;
+					file = new File("plv-" + timestamp + ".png");
+					timestamp++;
+				} while (!file.getAbsoluteFile().exists());
+				 */
+				try {
+					ChartUtilities.saveChartAsPNG(file, chartView.getChart(), chartView.getSize().width, chartView.getSize().height);
+					JOptionPane.showMessageDialog(frame,
+							"PNG file is generated.\n" + file.getAbsolutePath());
+				} catch (IOException e1) {
+					JOptionPane.showMessageDialog(frame,
+							"Failed in generatng PNG file.\n" + e1.getMessage(),
+							"Error",
+							JOptionPane.ERROR_MESSAGE);					
+				}				
+			} else if ("Chart configuration".equals(source.getToolTipText())) {
+				String title = chartView.getChart().getTitle().getText();
+				title = (String)JOptionPane.showInputDialog(frame,						
+						"Enter chart title:",
+						"Chart configuration - 1/3",
+						JOptionPane.QUESTION_MESSAGE,
+						null,
+						null,
+						title);
+				if (title != null) {
+					chartView.getChart().setTitle(title.trim());
+					String xLabel = chartView.getChart().getXYPlot().getDomainAxis().getLabel();
+					xLabel = (String)JOptionPane.showInputDialog(frame,
+							"Enter X-axis label:",
+							"Chart configuration - 2/3",
+							JOptionPane.QUESTION_MESSAGE,
+							null,
+							null,
+							xLabel);
+					if (xLabel != null) {
+						chartView.getChart().getXYPlot().getDomainAxis().setLabel(xLabel.trim());
+						String yLabel = chartView.getChart().getXYPlot().getRangeAxis().getLabel();
+						yLabel = (String)JOptionPane.showInputDialog(frame,
+								"Enter Y-axis label:",
+								"Chart configuration - 3/3",
+								JOptionPane.QUESTION_MESSAGE,
+								null,
+								null,
+								yLabel);
+						if (yLabel != null) {
+							chartView.getChart().getXYPlot().getRangeAxis().setLabel(yLabel.trim());
+						}
+					}
+				}
+			} else if ("Help".equals(source.getToolTipText())) {
+				JOptionPane.showMessageDialog(frame,
+						"The author is too lazy to provide a help text.\nHAHAHAHAHA------",
+						"PLV 2.0",
+						JOptionPane.INFORMATION_MESSAGE,
+						createImageIcon("rabbit.gif"));
+
+			} 
 			source.setSelected(false);
 		}
 
 	}
 
-	private void addFiles() {
-		/*
-		if(firstFile && (PrefManager.get().getPreferredSizeFileChooser().height > 0)) {
-            fc.setPreferredSize(PrefManager.get().getPreferredSizeFileChooser());
-        }
-		 */
-		int returnVal = fc.showOpenDialog(this.getRootPane());
-		//fc.setPreferredSize(fc.getSize());
-		//PrefManager.get().setPreferredSizeFileChooser(fc.getSize());
+	private void addFiles(File[] files) {
 
-		if (returnVal == JFileChooser.APPROVE_OPTION) {
-			File[] files = fc.getSelectedFiles();
-			for (int i = 0; i < files.length; ++i) {
-				try {
-					perfLogData.loadPerfLogFile(files[i].getAbsolutePath());
-				} catch (Exception e) {					
-					e.printStackTrace();
+		String datePattern = perfLogData.DEFAULT_DATE_PATTERN;
+		for (int i = 0; i < files.length; ) {				
+
+			try {
+				perfLogData.loadPerfLogFile(files[i].getAbsolutePath(), datePattern);
+				datePattern = perfLogData.DEFAULT_DATE_PATTERN;
+				i = i + 1;
+			} catch (ParseException e) {	
+				String dateString = e.getMessage();
+				dateString = dateString.substring(dateString.indexOf("\""));
+				if (dateString == null) {
+					//statusBar.setInfoText("Could not parse the file: " + files[i].getName());
+					i = i + 1;
+					continue;
 				}
-			}
-			
-			updateFilterManager();
-			
-		}
 
+				String s = (String)JOptionPane.showInputDialog(
+						frame,
+						"Could not parse the input date. \nPlease enter a new format:\n"
+								+ dateString,
+								"Set Date Format",
+								JOptionPane.QUESTION_MESSAGE,
+								null,
+								null,
+								datePattern);
+
+				if (s != null) {
+					datePattern = s.trim();
+				} else {
+					i = i + 1;
+					continue;
+				}
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(frame,
+						"Could not process the file: " + files[i].getName(),
+						"Error",
+						JOptionPane.ERROR_MESSAGE);
+				i = i + 1;
+			} 
+
+		}
+		updateFilterManager();			
 	}
-	
+
 	private void updateFilterManager() {
-		filterManager.setGlobalStartTime(perfLogData.getCounterStartTime());
-		filterManager.setGlobalEndTime(perfLogData.getCounterEndTime());
-		//filterManager.setFilterStartTime((filterManager.getGlobalStartTime().getTime() / 2 + filterManager.getGlobalEndTime().getTime() / 2));
-		
-		filterChanged();
+		long oldStartTime = filterManager.getGlobalStartTime().getTime();
+		long oldEndTime = filterManager.getGlobalEndTime().getTime();
+		long newStartTime = perfLogData.getCounterStartTime().getTime();
+		long newEndTime = perfLogData.getCounterEndTime().getTime();
+
+		if (oldStartTime != newStartTime || oldEndTime != newEndTime) {
+			filterManager.setGlobalStartTime(newStartTime);
+			filterManager.setGlobalEndTime(newEndTime);
+			filterChanged(true);
+		} else {
+			filterChanged(false);
+		}
 	}
-	
-	public void filterChanged() {
-		previewComponent.updateFilterPosition();
-		perfLogData.updateCounterStats(filterManager.getFilterStartTime(), filterManager.getFilterEndTime());
+
+	public void filterChanged(boolean isGlobalChanged) {
+		if (!filterManager.isValid())
+			return ;
+
+		if (isGlobalChanged)
+			previewComponent.updateFilterPosition();
+
+		perfLogData.updateCounterStats(filterManager.getFilterStartTime(), filterManager.getFilterEndTime());	
+		if (filterManager.getFilterStartTime().getTime() < filterManager.getFilterEndTime().getTime())
+			domain.setRange(filterManager.getFilterStartTime(), filterManager.getFilterEndTime());	
 		tableModel.fireTableDataChanged();
-		domain.setRange(filterManager.getFilterStartTime(), filterManager.getFilterEndTime());
+
+		if (lastSelectedRow != -1) {
+			int row = tableView.getRowSorter().convertRowIndexToView(lastSelectedRow);
+			tableView.requestFocusInWindow();
+			tableView.setRowSelectionInterval(row, row);
+		} else if (tableView.getRowCount() > 0) {			
+			tableView.requestFocusInWindow();
+			tableView.setRowSelectionInterval(0, 0);
+		}
+	}
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		int row = tableView.getSelectedRow();
+
+		if (row != -1) {
+			row = tableView.getRowSorter().convertRowIndexToModel(row);
+			if (row != lastSelectedRow) {
+				lastSelectedRow = row;
+				perfChartDataSet.removeAllCounter();
+				Counter counter = perfLogData.getCounterList()[row];
+				perfChartDataSet.addCounter(counter);
+				previewComponent.setCounter(counter);
+			}
+		}
+	}
+
+	private void removeCounterFromTable() {
+		int row = tableView.getSelectedRow();		
+
+		if (row != -1) {
+			row = tableView.getRowSorter().convertRowIndexToModel(row);			
+			lastSelectedRow = -1;
+			perfChartDataSet.removeAllCounter();
+			previewComponent.setCounter(null);
+
+			Counter counter = perfLogData.getCounterList()[row];				
+			perfLogData.removeCounter(counter);
+
+			tableModel.fireTableDataChanged();
+			updateFilterManager();
+		}
 	}
 
 	/**
@@ -448,23 +657,12 @@ public class PLV extends JPanel implements ListSelectionListener, ActionListener
 	}
 
 	@Override
-	public void valueChanged(ListSelectionEvent e) {
-		int row = tableView.getSelectedRow();
-		//tableView.getValueAt(row, -1);
-
-		if (row != -1) {
-			row = tableView.getRowSorter().convertRowIndexToModel(row);
-			if (row != lastSelectedRow) {
-				lastSelectedRow = row;
-				perfChartDataSet.removeAllCounter();
-				Counter counter = perfLogData.getCounterList()[row];
-				perfChartDataSet.addCounter(counter);
-				previewComponent.setCounter(counter);								
+	public void lostOwnership(Clipboard clipboard, Transferable contents) {
+		// TODO Auto-generated method stub
 		
-
-			}
-		}
 	}
+
+
 
 
 }

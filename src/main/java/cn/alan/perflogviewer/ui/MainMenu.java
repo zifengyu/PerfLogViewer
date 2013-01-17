@@ -23,22 +23,15 @@
 package cn.alan.perflogviewer.ui;
 
 import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
 
 /**
- * provides instances of the main menu (though there is typically only one).
- *
- * @author irockel
+ * provides instances of the tool bar
+ *  
  */
 public class MainMenu extends JMenuBar {
 
@@ -77,9 +70,12 @@ public class MainMenu extends JMenuBar {
 		toolBar.add(createToolBarButton("Remove selected row", "table-remove-icon.png"));		
 		toolBar.add(createToolBarButton("Clear all", "tables-icon.png"));
 		toolBar.addSeparator();
-		toolBar.add(createToolBarButton("Export to clipboard", "Clipboard-Manager-icon.png"));
+		JButton button = createToolBarButton("Export to clipboard", "Clipboard-Manager-icon.png");
+		//button.setEnabled(false);
+		toolBar.add(button);
 		toolBar.add(createToolBarButton("Export to image", "Line-Chart-icon.png"));
 		toolBar.addSeparator();
+		toolBar.add(createToolBarButton("Chart configuration", "app-settings-icon.png"));
 		toolBar.add(createToolBarButton("Help", "Actions-help-about-icon.png"));
 	}
 

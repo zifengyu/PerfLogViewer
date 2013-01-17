@@ -64,6 +64,14 @@ private final static PrefManager prefManager = new PrefManager();
         toolPrefs.putInt("windowState", windowState);
     }
     
+    public int getTableViewColumnSize(int column) {
+    	return toolPrefs.getInt("tableViewColumnSize" + column, 100);
+    }
+    
+    public void setTableViewColumnSize(int column, int size) {
+    	toolPrefs.putInt("tableViewColumnSize" + column, size);
+    }
+    
     public void flush() {
         try {
             toolPrefs.flush();

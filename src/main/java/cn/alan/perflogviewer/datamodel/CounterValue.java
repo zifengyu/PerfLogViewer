@@ -53,7 +53,7 @@ public class CounterValue {
 		case DATATYPE_PERCENT:
 			format.setMinimumFractionDigits(2);
 			format.setMaximumFractionDigits(2);
-			valueString = format.format(value) + "%";
+			valueString = format.format(value);
 			break;
 		default:
 			format.setMinimumFractionDigits(3);

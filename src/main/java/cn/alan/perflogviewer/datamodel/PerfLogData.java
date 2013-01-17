@@ -2,7 +2,10 @@ package cn.alan.perflogviewer.datamodel;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,14 +15,16 @@ public class PerfLogData {
 	
 	private ArrayList<Counter> counterList = new ArrayList<Counter>();
 	
-	public void loadPerfLogFile(String filePath) throws Exception {
+	public final String DEFAULT_DATE_PATTERN="MM/dd/yyyy HH:mm:ss.SSS";
+	
+	public void loadPerfLogFile(String filePath, String datePattern) throws ParseException, IOException {
 		ArrayList<Counter> newCounterList = new ArrayList<Counter>();
 		File logFile = new File(filePath);
 		
 		BufferedReader reader = new BufferedReader(new FileReader(logFile));
 		String line;
 		int lineNum = 0;
-		SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");		
+		SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern == null ? DEFAULT_DATE_PATTERN : datePattern);		
 		
 		while ((line = reader.readLine()) != null) {
 			String[] items = line.split(",");			

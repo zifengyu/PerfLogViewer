@@ -22,7 +22,7 @@ public class Counter {
 	public Counter(String filePath, String counterName) throws IllegalArgumentException {
 		this.filePath = filePath;
 
-		Pattern p = Pattern.compile("\\\\\\\\(.+)\\\\(.+)");
+		Pattern p = Pattern.compile("\\\\\\\\([^\\\\]+)\\\\(.+)");
 		Matcher m = p.matcher(counterName);
 
 		if (!m.find()) {
@@ -92,7 +92,10 @@ public class Counter {
 			startTime = getStartTime();
 		if (endTime == null)
 			endTime = getEndTime();
-		return data.subMap(startTime, true, endTime, true).values().toArray();		
+		if (startTime.getTime() <= endTime.getTime())
+			return data.subMap(startTime, true, endTime, true).values().toArray();
+		else
+			return new Object[0];
 	}
 
 	public String getFilePath() {

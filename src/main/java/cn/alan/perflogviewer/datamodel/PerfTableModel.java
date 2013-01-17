@@ -39,7 +39,7 @@ public class PerfTableModel extends AbstractTableModel {
 		case -1:
 			return counter;
 		case 1:
-			value = counter.getComputer();
+			value = counter.getGroup();
 			break;
 		case 2:
 			value = counter.getMeasurement();
